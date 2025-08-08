@@ -147,7 +147,7 @@ const BudgetMainBrandsComponent: React.FC = () => {
       });
       
       // Define the main brands to include
-      const MAIN_BRANDS = ['Antoniolupi', 'Rimadesio', 'Ernestomeda S.p.A.'];
+      const MAIN_BRANDS = ['Antoniolupi', 'Rimadesio'];
       
       // Clean open SOs data and filter for main brands
       const cleanOpenSOs: CleanOpenSOItem[] = openSOs.map(item => {

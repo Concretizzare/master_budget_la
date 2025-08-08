@@ -43,8 +43,7 @@ interface Totals {
 // List of brands to exclude
 const EXCLUDED_BRANDS = [
   'Antoniolupi',
-  'Rimadesio',
-  'Ernestomeda S.p.A.'
+  'Rimadesio'
 ];
 
 const formatCurrency = (value: number): string => {
