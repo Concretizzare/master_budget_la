@@ -196,27 +196,51 @@ const HeaderStats: React.FC<{
 
 // Budget Progress Component
 const BudgetProgress: React.FC<{ vendorData: VendorData }> = ({ vendorData }) => {
+  console.log('DEBUG - BudgetProgress vendorData:', vendorData);
+  
   const COLORS = ['#4CAF50', '#2196F3', '#FFC107'];
   
+  if (!vendorData) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Budget Allocation</h2>
+        <div className="flex items-center justify-center h-80">
+          <div className="text-center">
+            <p className="text-gray-500 text-lg mb-2">No vendor data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   const data = [
-    { name: 'Invoiced', value: vendorData.invoicedAmount },
-    { name: 'Open SOs', value: vendorData.openSOsAmount },
+    { name: 'Invoiced', value: vendorData.invoicedAmount || 0 },
+    { name: 'Open SOs', value: vendorData.openSOsAmount || 0 },
     { name: 'Remaining', value: vendorData.remainingBudget > 0 ? vendorData.remainingBudget : 0 }
   ];
   
-  // Only show pie sections with values > 0
-  const filteredData = data.filter(item => item.value > 0);
-  const hasData = filteredData.length > 0 && vendorData.budgetAmount > 0;
+  console.log('DEBUG - Budget data:', data);
+  
+  // Show chart if there's any budget amount, even if no sales data
+  const hasBudget = vendorData.budgetAmount > 0;
+  
+  // If there's budget but no sales/open SOs, show just remaining budget
+  const chartData = data.filter(item => item.value > 0);
+  if (chartData.length === 0 && hasBudget) {
+    chartData.push({ name: 'Remaining Budget', value: vendorData.budgetAmount });
+  }
+  
+  console.log('DEBUG - Chart data:', chartData);
   
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Budget Allocation</h2>
       <div className="flex items-center justify-center h-80">
-        {hasData ? (
+        {hasBudget && chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={filteredData}
+                data={chartData}
                 cx="50%"
                 cy="50%"
                 labelLine={true}
@@ -225,7 +249,7 @@ const BudgetProgress: React.FC<{ vendorData: VendorData }> = ({ vendorData }) =>
                 fill="#8884d8"
                 dataKey="value"
               >
-                {filteredData.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -235,9 +259,12 @@ const BudgetProgress: React.FC<{ vendorData: VendorData }> = ({ vendorData }) =>
           </ResponsiveContainer>
         ) : (
           <div className="text-center">
-            <p className="text-gray-500 text-lg mb-2">No budget allocation data</p>
-            <p className="text-gray-400 text-sm">Budget: {formatCurrency(vendorData.budgetAmount)}</p>
-            <p className="text-gray-400 text-sm">Add sales data to see allocation</p>
+            <p className="text-gray-500 text-lg mb-2">Budget Allocation</p>
+            <p className="text-gray-400 text-sm">Budget: {formatCurrency(vendorData.budgetAmount || 0)}</p>
+            <p className="text-gray-400 text-sm">Invoiced: {formatCurrency(vendorData.invoicedAmount || 0)}</p>
+            <p className="text-gray-400 text-sm">Open SOs: {formatCurrency(vendorData.openSOsAmount || 0)}</p>
+            <p className="text-gray-400 text-sm">Remaining: {formatCurrency(vendorData.remainingBudget || 0)}</p>
+            {!hasBudget && <p className="text-red-500 text-sm mt-2">No budget defined for this vendor</p>}
           </div>
         )}
       </div>
@@ -616,10 +643,15 @@ const VendorDetailPage: React.FC<{
   vendorName: string;
   detailedData: DetailedVendorData | undefined;
 }> = ({ vendorName, detailedData }) => {
+  console.log('DEBUG - VendorDetailPage:', vendorName, detailedData);
+  
   if (!detailedData) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">No data available for {vendorName}</p>
+        <div className="text-center">
+          <p className="text-gray-500 text-lg mb-2">No data available for {vendorName}</p>
+          <p className="text-gray-400 text-sm">Check if this vendor exists in your budget and sales data</p>
+        </div>
       </div>
     );
   }
