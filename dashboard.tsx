@@ -206,31 +206,40 @@ const BudgetProgress: React.FC<{ vendorData: VendorData }> = ({ vendorData }) =>
   
   // Only show pie sections with values > 0
   const filteredData = data.filter(item => item.value > 0);
+  const hasData = filteredData.length > 0 && vendorData.budgetAmount > 0;
   
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Budget Allocation</h2>
       <div className="flex items-center justify-center h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={filteredData}
-              cx="50%"
-              cy="50%"
-              labelLine={true}
-              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {filteredData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+        {hasData ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={filteredData}
+                cx="50%"
+                cy="50%"
+                labelLine={true}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {filteredData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="text-center">
+            <p className="text-gray-500 text-lg mb-2">No budget allocation data</p>
+            <p className="text-gray-400 text-sm">Budget: {formatCurrency(vendorData.budgetAmount)}</p>
+            <p className="text-gray-400 text-sm">Add sales data to see allocation</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -254,30 +263,41 @@ const MonthlyInvoiceData: React.FC<{
     .orderBy(['month'], ['asc'])
     .value();
 
+  const hasData = monthlyData.length > 0;
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Monthly Invoice Trends</h2>
       <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={monthlyData}
-            margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis tickFormatter={(value) => formatCurrency(value)} />
-            <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="total" 
-              name="Invoice Amount" 
-              stroke="#4CAF50" 
-              strokeWidth={2} 
-              dot={{ r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {hasData ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={monthlyData}
+              margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="total" 
+                name="Invoice Amount" 
+                stroke="#4CAF50" 
+                strokeWidth={2} 
+                dot={{ r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-gray-500 text-lg mb-2">No invoice data available</p>
+              <p className="text-gray-400 text-sm">Monthly trends will appear when invoice data is added</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
