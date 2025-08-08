@@ -594,8 +594,16 @@ const OverviewPage: React.FC<{
 // Vendor Detail Page Component
 const VendorDetailPage: React.FC<{
   vendorName: string;
-  detailedData: DetailedVendorData;
+  detailedData: DetailedVendorData | undefined;
 }> = ({ vendorName, detailedData }) => {
+  if (!detailedData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">No data available for {vendorName}</p>
+      </div>
+    );
+  }
+  
   return (
     <>
       <HeaderStats 
@@ -606,13 +614,13 @@ const VendorDetailPage: React.FC<{
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <BudgetProgress vendorData={detailedData} />
-        <MonthlyInvoiceData invoicedItems={detailedData.invoicedItems} />
+        <MonthlyInvoiceData invoicedItems={detailedData.invoicedItems || []} />
       </div>
       
       <DetailedTables 
         vendorName={vendorName}
-        invoicedItems={detailedData.invoicedItems} 
-        openSOItems={detailedData.openSOItems}
+        invoicedItems={detailedData.invoicedItems || []} 
+        openSOItems={detailedData.openSOItems || []}
       />
     </>
   );
@@ -740,7 +748,9 @@ const SalesDashboard: React.FC = () => {
         const grandTotalOpenSOs = _.sumBy(cleanOpenSOs, 'soAmount');
 
         // Calculate the grand total budget from budget.csv
+        console.log('DEBUG - Clean budget data:', cleanBudget);
         const grandTotalBudget = _.sumBy(cleanBudget, 'budgetAmount');
+        console.log('DEBUG - Grand total budget:', grandTotalBudget);
 
         // Calculate the grand total sales
         const grandTotalSales = grandTotalInvoiced + grandTotalOpenSOs;
@@ -770,6 +780,8 @@ const SalesDashboard: React.FC = () => {
         
         // Get budget by brand
         const budgetByBrand = _.keyBy(cleanBudget, 'brand');
+        console.log('DEBUG - Budget by brand:', budgetByBrand);
+        console.log('DEBUG - Available vendors:', vendors);
         
         // Prepare dashboard data (per vendor)
         const dashboardData: VendorData[] = vendors.map(vendor => {
@@ -779,6 +791,14 @@ const SalesDashboard: React.FC = () => {
           const totalSales = invoicedAmount + openSOsAmount;
           const remainingBudget = budgetAmount - totalSales;
           const percentComplete = budgetAmount > 0 ? (totalSales / budgetAmount) * 100 : 0;
+          
+          console.log('DEBUG - Vendor:', vendor, {
+            budgetAmount,
+            invoicedAmount,
+            openSOsAmount,
+            totalSales,
+            remainingBudget
+          });
           
           return {
             vendor,
@@ -838,10 +858,17 @@ const SalesDashboard: React.FC = () => {
         mainVendors.forEach(vendor => {
           const baseData = vendorsWithBudget.find(v => v.vendor === vendor);
           
+          console.log('DEBUG - Processing vendor:', vendor, 'baseData:', baseData);
+          
           if (baseData) {
             // Get vendor-specific items
             const vendorInvoicedItems = cleanInvoiced.filter(item => item.brand === vendor);
             const vendorOpenSOItems = cleanOpenSOs.filter(item => item.vendor === vendor);
+            
+            console.log('DEBUG - Vendor items for', vendor, {
+              invoicedItems: vendorInvoicedItems.length,
+              openSOItems: vendorOpenSOItems.length
+            });
             
             detailedData[vendor] = {
               ...baseData,
@@ -850,6 +877,8 @@ const SalesDashboard: React.FC = () => {
             };
           }
         });
+        
+        console.log('DEBUG - Final detailed data:', detailedData);
         
         // Set state with processed data
         setDashboardData(vendorsWithBudget);
